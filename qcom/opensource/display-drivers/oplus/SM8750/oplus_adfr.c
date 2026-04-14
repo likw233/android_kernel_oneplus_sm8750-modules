@@ -1789,8 +1789,8 @@ int oplus_adfr_status_reset(void *dsi_panel)
 		ADFR_DEBUG("oplus_adfr_need_filter_auto_on_cmd:%d\n", p_oplus_adfr_params->need_filter_auto_on_cmd);
 		OPLUS_ADFR_TRACE_INT("oplus_adfr_need_filter_auto_on_cmd", p_oplus_adfr_params->need_filter_auto_on_cmd);
 
-		p_oplus_adfr_params->sa_min_fps = refresh_rate;
-		p_oplus_adfr_params->sa_min_fps_updated = false;
+		p_oplus_adfr_params->sa_min_fps = 1;
+		p_oplus_adfr_params->sa_min_fps_updated = true;
 		if (oplus_adfr_high_precision_sa_mode_is_enabled(p_oplus_adfr_params)) {
 			p_oplus_adfr_params->sa_high_precision_fps_updated = false;
 		}
@@ -1834,6 +1834,14 @@ int oplus_adfr_status_reset(void *dsi_panel)
 	OPLUS_ADFR_TRACE_END("oplus_adfr_status_reset");
 
 	ADFR_DEBUG("end\n");
+
+	if (p_oplus_adfr_params) {
+		p_oplus_adfr_params->sa_min_fps = 1;
+		p_oplus_adfr_params->sa_min_fps_updated = true;
+
+		p_oplus_adfr_params->auto_mode = OPLUS_ADFR_AUTO_ON;
+		p_oplus_adfr_params->auto_mode_updated = true;
+	}
 
 	return rc;
 }
