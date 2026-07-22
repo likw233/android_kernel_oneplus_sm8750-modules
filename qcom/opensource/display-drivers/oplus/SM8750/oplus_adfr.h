@@ -245,6 +245,7 @@ enum hrtimer_restart oplus_adfr_test_te_timer_handler(struct hrtimer *timer);
 int oplus_adfr_register_test_te_irq(void *dsi_display);
 
 /* -------------------- osync mode -------------------- */
+int oplus_adfr_vrr_sa_restore(void *sde_connector);
 int oplus_adfr_set_osync_params(void *sde_connector, unsigned int oplus_adfr_osync_params);
 int oplus_adfr_osync_min_fps_update(void *dsi_display);
 int oplus_adfr_get_osync_window_min_fps(void *drm_connector);
