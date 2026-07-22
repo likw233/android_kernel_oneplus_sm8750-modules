@@ -1312,9 +1312,6 @@ void sde_connector_set_qsync_params(struct drm_connector *connector)
 	struct sde_connector_state *c_state;
 	u32 qsync_propval = 0, ept_fps = 0;
 	bool prop_dirty;
-#ifdef OPLUS_FEATURE_DISPLAY_ADFR
-	bool adfr_vrr_qsync_updated = false;
-#endif /* OPLUS_FEATURE_DISPLAY_ADFR */
 
 	if (!connector)
 		return;
@@ -1341,7 +1338,6 @@ void sde_connector_set_qsync_params(struct drm_connector *connector)
 #ifdef OPLUS_FEATURE_DISPLAY_ADFR
 			OPLUS_ADFR_TRACE_INT("oplus_adfr_osync_mode", c_conn->qsync_mode);
 			oplus_adfr_set_osync_params(c_conn, OPLUS_ADFR_OSYNC_MODE);
-			adfr_vrr_qsync_updated = c_conn->qsync_mode == SDE_RM_QSYNC_CONTINUOUS_MODE;
 #endif /* OPLUS_FEATURE_DISPLAY_ADFR */
 		}
 	}
@@ -1369,20 +1365,7 @@ void sde_connector_set_qsync_params(struct drm_connector *connector)
 			(c_conn->qsync_mode != SDE_RM_QSYNC_CONTINUOUS_MODE)) {
 		c_conn->qsync_mode = SDE_RM_QSYNC_CONTINUOUS_MODE;
 		c_conn->qsync_updated = true;
-#ifdef OPLUS_FEATURE_DISPLAY_ADFR
-		OPLUS_ADFR_TRACE_INT("oplus_adfr_osync_mode", c_conn->qsync_mode);
-		oplus_adfr_set_osync_params(c_conn, OPLUS_ADFR_OSYNC_MODE);
-		adfr_vrr_qsync_updated = true;
-#endif /* OPLUS_FEATURE_DISPLAY_ADFR */
 	}
-
-#ifdef OPLUS_FEATURE_DISPLAY_ADFR
-	if ((c_conn->vrr_caps.arp_support || c_conn->vrr_caps.video_psr_support) &&
-			adfr_vrr_qsync_updated) {
-		oplus_adfr_set_osync_params(c_conn, OPLUS_ADFR_OSYNC_MIN_FPS);
-		oplus_adfr_vrr_sa_restore(c_conn);
-	}
-#endif /* OPLUS_FEATURE_DISPLAY_ADFR */
 
 }
 
@@ -2639,15 +2622,15 @@ static int sde_connector_atomic_set_property(struct drm_connector *connector,
 		break;
 	case CONNECTOR_PROP_QSYNC_MODE:
 #ifdef OPLUS_FEATURE_DISPLAY_ADFR
-		if (oplus_adfr_is_oa_use_fixed_te_c(c_conn) &&
-				val != SDE_RM_QSYNC_CONTINUOUS_MODE) {
+		if (oplus_adfr_is_oa_use_fixed_te_c(c_conn)) {
 			SDE_INFO("oplus_adfr_is_oa_use_fixed_te not set qsync_mode %d\n", (int)val);
+			break;
+		} else {
+			msm_property_set_dirty(&c_conn->property_info,
+					&c_state->property_state, idx);
 			break;
 		}
 #endif /* OPLUS_FEATURE_DISPLAY_ADFR */
-		msm_property_set_dirty(&c_conn->property_info,
-				&c_state->property_state, idx);
-		break;
 	case CONNECTOR_PROP_AVR_STEP_STATE:
 	case CONNECTOR_PROP_EPT_FPS:
 		msm_property_set_dirty(&c_conn->property_info,

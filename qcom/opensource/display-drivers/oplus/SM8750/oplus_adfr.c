@@ -984,64 +984,6 @@ bool oplus_adfr_h_skew_is_different(void *dsi_display, void *dsi_display_mode_0,
 	return rc;
 }
 
-int oplus_adfr_vrr_sa_restore(void *sde_connector)
-{
-	struct sde_connector *c_conn = sde_connector;
-	struct dsi_display *display = NULL;
-	struct oplus_adfr_params *p_oplus_adfr_params = NULL;
-
-	if (!c_conn) {
-		ADFR_ERR("invalid sde connector param\n");
-		return -EINVAL;
-	}
-
-	if (c_conn->connector_type != DRM_MODE_CONNECTOR_DSI) {
-		ADFR_DEBUG("not in dsi mode, should not restore vrr sa params\n");
-		return 0;
-	}
-
-	display = c_conn->display;
-	if (!display || !display->panel) {
-		ADFR_ERR("invalid display params\n");
-		return -EINVAL;
-	}
-
-#if defined(CONFIG_PXLW_IRIS)
-	if (iris_is_chip_supported() && (!strcmp(display->display_type, "secondary"))) {
-		ADFR_INFO("no need to restore vrr sa params for iris chip\n");
-		return 0;
-	}
-#endif /* CONFIG_PXLW_IRIS */
-
-	p_oplus_adfr_params = oplus_adfr_get_params(display->panel);
-	if (!p_oplus_adfr_params) {
-		ADFR_ERR("invalid p_oplus_adfr_params param\n");
-		return -EINVAL;
-	}
-
-	if (!oplus_adfr_is_supported(p_oplus_adfr_params)) {
-		ADFR_DEBUG("adfr is not supported\n");
-		return 0;
-	}
-
-	p_oplus_adfr_params->auto_mode = OPLUS_ADFR_AUTO_ON;
-	p_oplus_adfr_params->auto_mode_updated = true;
-	p_oplus_adfr_params->sa_min_fps = 1;
-	p_oplus_adfr_params->sa_min_fps_updated = true;
-	if (oplus_adfr_high_precision_sa_mode_is_enabled(p_oplus_adfr_params))
-		p_oplus_adfr_params->sa_high_precision_fps_updated = false;
-
-	ADFR_INFO("vrr sa restore: auto_mode:%u[%d],sa_min_fps:%u[%d]\n",
-			p_oplus_adfr_params->auto_mode, p_oplus_adfr_params->auto_mode_updated,
-			p_oplus_adfr_params->sa_min_fps, p_oplus_adfr_params->sa_min_fps_updated);
-	OPLUS_ADFR_TRACE_INT("oplus_adfr_auto_mode", p_oplus_adfr_params->auto_mode);
-	OPLUS_ADFR_TRACE_INT("oplus_adfr_auto_mode_updated", p_oplus_adfr_params->auto_mode_updated);
-	OPLUS_ADFR_TRACE_INT("oplus_adfr_sa_min_fps", p_oplus_adfr_params->sa_min_fps);
-	OPLUS_ADFR_TRACE_INT("oplus_adfr_sa_min_fps_updated", p_oplus_adfr_params->sa_min_fps_updated);
-
-	return 0;
-}
-
 /* handle CONNECTOR_PROP_ADFR_MIN_FPS property value */
 int oplus_adfr_property_update(void *sde_connector, void *sde_connector_state, int prop_id, uint64_t prop_val)
 {
