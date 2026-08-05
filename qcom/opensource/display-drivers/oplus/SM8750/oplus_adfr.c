@@ -493,7 +493,12 @@ bool oplus_adfr_is_oa_use_fixed_te(void *sde_encoder_phys)
 		return false;
 	}
 
-	return (bool)(p_oplus_adfr_params->oa_use_fixed_te);
+	if (!display->panel->cur_mode)
+		return false;
+
+	return p_oplus_adfr_params->oa_use_fixed_te &&
+		((display->panel->cur_mode->timing.h_skew == OPLUS_ADFR) ||
+		(display->panel->cur_mode->timing.h_skew == OPLUS_MFR));
 }
 
 bool oplus_adfr_is_oa_use_fixed_te_c(void *sde_connector) {
@@ -517,7 +522,12 @@ bool oplus_adfr_is_oa_use_fixed_te_c(void *sde_connector) {
 		return false;
 	}
 
-	return (bool)(p_oplus_adfr_params->oa_use_fixed_te);
+	if (!display->panel->cur_mode)
+		return false;
+
+	return p_oplus_adfr_params->oa_use_fixed_te &&
+		((display->panel->cur_mode->timing.h_skew == OPLUS_ADFR) ||
+		(display->panel->cur_mode->timing.h_skew == OPLUS_MFR));
 }
 
 /* -------------------- standard adfr -------------------- */
