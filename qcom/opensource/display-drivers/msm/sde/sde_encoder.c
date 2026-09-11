@@ -1414,16 +1414,30 @@ static int _sde_encoder_avr_step_check(struct sde_connector *sde_conn,
 	if ((avr_step_state != AVR_STEP_ENABLE) || !sde_conn->ops.get_avr_step_fps)
 		return 0;
 
+	/*
+	 * AVR step can only be programmed while qsync is active. The composer HAL
+	 * clears qsync in the same commit that powers the panel off while
+	 * avr_step_state stays enabled, and there is no mode to validate against
+	 * during a power off either. Failing the commit here aborted the whole
+	 * atomic commit, so the display never powered off, no
+	 * DRM_PANEL_EVENT_BLANK was sent to the touch driver and it never armed
+	 * its low power wakeup gesture (double tap to wake). Nothing to validate
+	 * in that case, so skip the check instead of rejecting the commit.
+	 */
 	if (!qsync_mode && avr_step_state) {
-		SDE_ERROR("invalid config: avr-step enabled without qsync\n");
-		return -EINVAL;
+		SDE_DEBUG("avr-step enabled without qsync, skipping avr step\n");
+		return 0;
 	}
+
+	/* No valid mode to validate against (display being turned off). */
+	if (!nom_fps || !vtotal)
+		return 0;
 
 	step_fps = sde_conn->ops.get_avr_step_fps(&sde_conn_state->base);
 
 	_sde_encoder_get_qsync_fps_callback(sde_conn_state->base.best_encoder, &min_fps,
 		&sde_conn_state->base, sde_conn);
-	if (!min_fps || !nom_fps || step_fps % nom_fps || step_fps % min_fps
+	if (!min_fps || step_fps % nom_fps || step_fps % min_fps
 			|| step_fps < nom_fps || (vtotal * nom_fps) % step_fps) {
 		SDE_ERROR("invalid avr_step rate! nom:%u min:%u step:%u vtotal:%u\n", nom_fps,
 				min_fps, step_fps, vtotal);
